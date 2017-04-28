@@ -86,7 +86,7 @@ int set_insert(Set* set, void* info, void* key){
 	new->info = info;
 	new->key = key;
 	
-	int key_value = set->hash_code(info);
+	int key_value = set->hash_code(key);
 	new->key_value = key_value;
 
 	List* current_list = set->vector[key_value % set->size];
@@ -200,12 +200,11 @@ Set* set_clear(Set* set){
 
 void* cell_complete_clear(void* cell, void*(*info_clear)(void* info)){
 	Cell* c = (Cell*) cell;
-	
 	c->info = info_clear(c->info);
-	cell_clear(cell);
+	free(c);
 	return NULL;
 }
-/*	
+
 Set* set_complete_clear(Set* set){
 
 	if(set->number_of_elements == 0){
@@ -218,9 +217,17 @@ Set* set_complete_clear(Set* set){
 	int freed = 0;
 	int max = set->number_of_elements;
 	int i = 0;
+	
+	Iterator* iterator = NULL;
 	while(freed < max && i < lenght){
 		if(set->vector[i] != NULL){
-			set->vector[i] = list_complete_clear2(set->vector[i], cell_complete_clear, set->info_clear);
+			iterator = iterator_create(set->vector[i]);
+			do{
+				cell_complete_clear( iterator_get_current(iterator) , set->info_clear);
+				iterator = iterator_next(iterator);
+			}while(!iterator_is_empty(iterator));
+
+			set->vector[i] = list_clear(set->vector[i]);
 			freed++;
 		}
 		i++;
@@ -229,5 +236,5 @@ Set* set_complete_clear(Set* set){
 	free(set->vector);
 	free(set);
 	return NULL;
-}*/
+}
 
